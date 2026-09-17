@@ -369,4 +369,5 @@ This repository demonstrates the frontend experience, not a complete mine-intell
 No license file is currently included. The bundled data attribution is documented in `src/data/realData.js` and in the application UI. Confirm rights and citation requirements before redistributing the project or the bundled video asset.#   M A N G N E X _ D e m o  
  #   M A N G N E X _ D e m o  
  #   M A N G N E X _ D e m o  
+ #   M a n g a n e s e _ P r e d i c t o r  
  
