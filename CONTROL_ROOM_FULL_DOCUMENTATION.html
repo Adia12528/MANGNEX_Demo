@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MANGNEX Control Room - Full Technical and Operational Documentation</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 17mm; }
+  :root { --ink:#182018; --muted:#526057; --line:#cfd8d0; --accent:#a94420; --teal:#176d68; --gold:#94651b; --soft:#f3f6f2; --soft2:#fafbf9; }
+  * { box-sizing:border-box; }
+  body { margin:0; color:var(--ink); font:10.2pt/1.48 "Segoe UI", Arial, sans-serif; }
+  h1,h2,h3 { margin:0 0 8px; line-height:1.15; }
+  h1 { font-size:27pt; letter-spacing:.2px; }
+  h2 { font-size:17pt; color:var(--teal); margin-top:22px; border-bottom:2px solid var(--teal); padding-bottom:5px; }
+  h3 { font-size:12.4pt; color:var(--accent); margin-top:15px; }
+  p { margin:5px 0 9px; }
+  ul,ol { margin:5px 0 10px 20px; padding:0; }
+  li { margin:3px 0; }
+  code { font:9pt Consolas, monospace; background:#eef1ed; padding:1px 3px; }
+  .cover { min-height:250mm; display:flex; flex-direction:column; justify-content:space-between; padding:8mm 2mm; page-break-after:always; }
+  .kicker { font:700 9pt Consolas, monospace; letter-spacing:1.4px; color:var(--accent); text-transform:uppercase; }
+  .cover h1 { max-width:155mm; margin-top:28mm; }
+  .subtitle { font-size:15pt; color:var(--muted); max-width:145mm; margin-top:12px; }
+  .rule { height:5px; width:58mm; background:var(--accent); margin:25px 0; }
+  .meta { border-top:1px solid var(--line); padding-top:10px; color:var(--muted); }
+  .notice { background:#fff3e8; border-left:4px solid var(--accent); padding:10px 12px; margin:12px 0; }
+  .note { background:#edf7f5; border-left:4px solid var(--teal); padding:9px 12px; margin:10px 0; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin:10px 0; }
+  .card { border:1px solid var(--line); background:var(--soft2); padding:9px 10px; break-inside:avoid; }
+  .card strong { display:block; color:var(--teal); margin-bottom:3px; }
+  table { width:100%; border-collapse:collapse; margin:9px 0 13px; font-size:9pt; break-inside:auto; }
+  th { background:#e7eee8; color:#183c35; text-align:left; font-weight:700; }
+  th,td { border:1px solid var(--line); padding:5px 6px; vertical-align:top; }
+  tr { break-inside:avoid; }
+  .formula { font:9pt/1.55 Consolas, monospace; background:#f1f3f0; border:1px solid var(--line); padding:8px 10px; white-space:pre-wrap; }
+  .small { color:var(--muted); font-size:8.8pt; }
+  .pagebreak { page-break-before:always; }
+  .toc a { color:var(--teal); text-decoration:none; }
+  .footer { margin-top:20px; border-top:1px solid var(--line); padding-top:7px; color:var(--muted); font-size:8.5pt; }
+  @media print { a { color:inherit; text-decoration:none; } }
+</style>
+</head>
+<body>
+<section class="cover">
+  <div>
+    <div class="kicker">MANGNEX / Control Room</div>
+    <div class="rule"></div>
+    <h1>Full Technical and Operational Documentation</h1>
+    <p class="subtitle">What the Control Room shows, how each module works, what happens when an operator interacts with it, and which parts are demonstrative versus production-connected.</p>
+  </div>
+  <div class="meta">
+    <p><strong>Document scope:</strong> Current React/Vite implementation in this repository</p>
+    <p><strong>Prepared:</strong> 10 September 2026</p>
+    <p><strong>Classification:</strong> Product and engineering reference; not a statutory mine-safety certificate or reserve report</p>
+  </div>
+</section>
+
+<h2 id="contents">Contents</h2>
+<div class="toc">
+<ol>
+  <li><a href="#executive">Executive summary</a></li>
+  <li><a href="#purpose">Purpose and operating loop</a></li>
+  <li><a href="#layout">Control Room layout and shared controls</a></li>
+  <li><a href="#overview">Overview and live alerts</a></li>
+  <li><a href="#reserve">Reserve Heatmap</a></li>
+  <li><a href="#forecast">Risk and What-If</a></li>
+  <li><a href="#directives">Shift Directives</a></li>
+  <li><a href="#strata">3D Strata and Shaft</a></li>
+  <li><a href="#dgms">DGMS Safety Handover</a></li>
+  <li><a href="#upload">Custom CSV Uploader</a></li>
+  <li><a href="#national">National Reserves</a></li>
+  <li><a href="#equipment">Equipment Check Logs</a></li>
+  <li><a href="#explorer">3D Subsurface Explorer</a></li>
+  <li><a href="#data">Data, calculations and state</a></li>
+  <li><a href="#workflow">End-to-end operator workflow</a></li>
+  <li><a href="#boundaries">Current boundaries and production roadmap</a></li>
+</ol>
+</div>
+
+<h2 id="executive">1. Executive Summary</h2>
+<p>The Control Room is the embedded operational dashboard inside MANGNEX, a browser-based manganese mining intelligence concept. It combines reserve-probability visualization, production and shortfall analysis, root-cause explanation, quantified shift actions, geological inspection, safety checklist handling, equipment logging, CSV ingestion, and national reference data in one interface.</p>
+<div class="notice"><strong>Important implementation fact:</strong> this repository is a client-side demonstration and decision-support prototype. It does not include a deployed ML service, database, authentication, FastAPI server, audit service, or certified reserve-estimation workflow. Most operational values are generated by deterministic local calculations. Current weather is fetched from Open-Meteo when available and otherwise replaced by a local fallback estimate.</div>
+<div class="grid">
+  <div class="card"><strong>Primary user</strong>Shift superintendent, mine manager, dispatch lead, safety lead, geology or planning user.</div>
+  <div class="card"><strong>Primary decision</strong>Where to investigate, what threatens output, which action to dispatch, and whether the shift is ready to hand over.</div>
+  <div class="card"><strong>Current mine profiles</strong>Balaghat, Jabalpur, Jhabua and Chhindwara.</div>
+  <div class="card"><strong>Current navigation</strong>Nine modules: Overview, Reserve Heatmap, Risk and What-If, Shift Directives, combined 3D Strata, Shaft and Subsurface Explorer, DGMS Safety Handover, Custom CSV Uploader, National Reserves, and Equipment Check Logs.</div>
+</div>
+
+<h2 id="purpose">2. Purpose and Operating Loop</h2>
+<p>The dashboard follows one operational loop:</p>
+<ol>
+<li><strong>Map:</strong> use a full-lease grid to highlight modeled reserve probability and identify cells worth verification.</li>
+<li><strong>Forecast:</strong> compare planned and actual output and estimate shortfall risk over a 30-day series with a 72-hour operational framing.</li>
+<li><strong>Explain:</strong> expose the drivers behind lost output, including equipment downtime, blast clearance, rainfall, and fleet availability.</li>
+<li><strong>Advise:</strong> rank concrete actions such as haulage reallocation, blast-window clearance, dewatering, and maintenance.</li>
+<li><strong>Verify and hand over:</strong> inspect geological bands, complete safety checks, log equipment condition, and print the shift handover dossier.</li>
+</ol>
+<p>The platform’s intended data-fusion narrative references satellite indicators, borehole assays, equipment telemetry, weather, and statutory safety checks. In the current code, satellite, borehole, geology, operational history, and safety values are bundled or generated locally; they are not streamed from production services.</p>
+
+<h2 id="layout">3. Layout and Shared Controls</h2>
+<h3>Mine selector</h3>
+<p>The header contains an Active Mine Site selector. Changing the mine updates the target, method, coordinates, profile-specific penalties, geological context, fleet identity, zone names, and weather request. It also clears any custom uploaded production series and recalculates generated views for the selected profile.</p>
+<table><tr><th>Mine</th><th>Target</th><th>Method</th><th>Lease</th><th>Key profile details</th></tr>
+<tr><td>Balaghat Mine (Bharweli)</td><td>1,855 t/day</td><td>Deep Underground &amp; Mechanized</td><td>43.8 km²</td><td>385 m shaft; 6 underground levels; 142 logged drill holes.</td></tr>
+<tr><td>Jabalpur Opencast Cluster</td><td>554 t/day</td><td>Opencast Mechanized</td><td>18.5 km²</td><td>6 excavators and 12 dumpers; wet-season drainage constraints.</td></tr>
+<tr><td>Jhabua Western Lease</td><td>163 t/day</td><td>Opencast Semi-Mechanized</td><td>9.2 km²</td><td>3 backhoes and 6 haulers; logistics-dependent medium-grade output.</td></tr>
+<tr><td>Chhindwara Border Block</td><td>53 t/day</td><td>Opencast &amp; Trenching</td><td>6.4 km²</td><td>2 excavators and 4 tippers; precision blasting near ecological buffers.</td></tr>
+</table>
+<h3>Weather and clock</h3>
+<p>The header shows a live local clock and temperature, precipitation, wind, and relative humidity. The browser calls Open-Meteo at the selected mine coordinates on load and every five minutes. A ten-second abort timeout switches the display to a calibrated offline estimate. The header labels the state as LIVE OPEN-METEO, MET SIM, or FETCHING.</p>
+<h3>Browser state and feedback</h3>
+<ul><li><code>localStorage</code> persists selected mine, active tab, action statuses, equipment logs, simulation sliders, zone selection and deployment count, alert-panel open state, and the local decision audit trail.</li><li>CSV import, CSV export, sample-template download, drill dispatch, printing, and audio feedback happen in the browser.</li><li>Success actions can trigger a synthesized Web Audio chime and confetti; the global speaker control can mute sounds.</li><li>The header shows whether the browser is online and whether the current weather state is live or a local simulation.</li><li>The interface supports English, Hindi, and Marathi translations and responsive mobile navigation.</li></ul>
+
+<h2 id="overview">4. Overview and Live Alerts</h2>
+<p>Overview is the shift-level summary. It is designed to answer: how much was produced, what is at risk, how much value is exposed, whether mandatory checks are complete, and where the recent trend is moving.</p>
+<h3>Displayed KPIs</h3>
+<ul><li><strong>Today’s Production:</strong> latest series actual tonnes, with the latest planned target below it.</li><li><strong>Revenue Shortfall:</strong> latest planned minus actual tonnes multiplied by the blended sample price of ₹14,200/t, displayed in lakhs.</li><li><strong>Shortfall Risk:</strong> latest generated or imported risk percentage, described with a 72-hour forecast horizon.</li><li><strong>DGMS Compliance:</strong> checked safety items divided by five total checklist items.</li></ul>
+<h3>Unified alert feed</h3>
+<p>The alert panel aggregates high or elevated shortfall risk, equipment faults, equipment watch states, overdue service, heavy or live rainfall, blast delay, high revenue exposure, offline weather, and incomplete DGMS checks. Red alerts are critical; amber alerts are watch items. Alerts are timestamped, dismissible, collapsible, and can route the operator directly to the relevant tab. A dismissed alert can return if the underlying condition clears and later recurs.</p>
+<h3>Charts</h3>
+<p>The first chart compares planned and actual output for the last 30 days. A second chart shows Madhya Pradesh district production for FY2019-20 using bundled Indian Bureau of Mines reference data for Balaghat, Jabalpur, Jhabua, and Chhindwara.</p>
+
+<h2 id="reserve">5. Reserve Heatmap</h2>
+<p>This module shows a 28 × 28 abstract lease grid for the selected mine. It is a screening and prioritization surface, not a certified reserve block model.</p>
+<ul><li>Each cell has a deterministic modeled probability from 0 to 1, rendered as a heat color.</li><li>About 9% of cells are flagged as borehole locations by the local generator; these begin as drill-verified.</li><li>Each cell includes modeled NDVI, thermal signature, and a grade band: high grade above 42% Mn, medium grade 30–42% Mn, or low grade/gondite.</li><li>Clicking a cell opens an inspector with lease coordinate, verification state, reserve probability, estimated grade, Sentinel-2 NDVI, and thermal value.</li><li>Dispatching an exploratory drill marks the cell as drill verified for the current session, shows feedback, and disables repeat dispatch.</li></ul>
+<div class="note"><strong>Interpretation:</strong> a high-probability cell indicates where the demonstration recommends verification. It does not prove an economically mineable reserve, define a legal resource category, or replace assay, drilling, geological modeling, or regulatory review.</div>
+
+<h2 id="forecast">6. Risk and What-If</h2>
+<h3>Thirty-day risk timeline</h3>
+<p>The line chart plots risk for each day in the current generated or uploaded series. Play, pause, reset, and a range slider let the operator step through the timeline. Playback changes the visible day marker; it does not run a separate forecasting service.</p>
+<h3>Mine-wide scenario sandbox</h3>
+<p>The sandbox includes named rehearsal presets for monsoon stress, fleet outage, blast-window delay, and recovery planning. Loading a preset updates the sliders and records the decision in the local audit trail.</p>
+<p>Four sliders recalculate the selected mine’s projected output immediately:</p>
+<table><tr><th>Input</th><th>Range / behavior</th><th>Effect</th></tr>
+<tr><td>Rainfall</td><td>0–60 mm</td><td>Penalty begins above 18 mm in the scenario formula.</td></tr>
+<tr><td>Equipment downtime</td><td>0–8 hours, 0.5-hour steps</td><td>Subtracts mine-specific tonnes per downtime hour.</td></tr>
+<tr><td>Blasting delay</td><td>0–4 hours</td><td>Subtracts mine-specific tonnes per blast-delay hour.</td></tr>
+<tr><td>Active rigs/loaders</td><td>5–10 units</td><td>Adds or removes an output bonus relative to an eight-unit baseline.</td></tr>
+</table>
+<p>The result reports projected shortfall risk, projected output against the mine target, tonne deficit, and revenue deficit. The Reset Scenario button returns the sliders to 12 mm rain, 1.5 hours downtime, zero blast delay, and nine active units.</p>
+<h3>Zone-level deployment simulator</h3>
+<p>The selected mine is split into three generated zones: underground tunnels for underground mines or open-pit benches for opencast mines. The operator chooses a zone and adds zero to four trucks or loaders. Each added unit recovers approximately 5.5% of that zone’s target; the panel compares recovery with today’s mine-wide shortfall and reports the percentage of the gap closed.</p>
+<h3>Explainability view</h3>
+<p>The global feature chart presents fixed demonstration impact values: haulage downtime 33.2 points, blasting clearance delay 25.6, planned tonnage target 14.1, monsoon precipitation 12.8, and active loader availability 8.5. The UI labels these as SHAP attribution, but the repository does not execute a SHAP library or trained model.</p>
+
+<h2 id="directives">7. Shift Directives</h2>
+<p>This module turns the selected day into an action list. The selected day defaults to the highest-risk day in the series and can be changed from the shift-date selector.</p>
+<h3>Root-cause breakdown</h3>
+<p>The panel estimates modeled lost tonnes from downtime, blast delay, rainfall, and fleet availability. Each displayed cause includes an observed metric, percentage of modeled loss, and a recurrence-prevention recommendation. This is distinct from the immediate action list.</p>
+<h3>Action rules</h3>
+<table><tr><th>Trigger</th><th>Generated directive</th><th>Quantified recovery</th><th>Team</th></tr>
+<tr><td>Downtime &gt; 0.5 hr</td><td>Reallocate haulage and mobile fleet to active benches.</td><td>Downtime × mine rate × 0.65.</td><td>Mobile Fleet Dispatch</td></tr>
+<tr><td>Blast delay &gt; 0 hr</td><td>Advance blast-window clearance with DGMS inspectorate.</td><td>Delay × mine rate × 0.72.</td><td>Safety &amp; Drilling Operations</td></tr>
+<tr><td>Rainfall &gt; 18 mm</td><td>Activate auxiliary sump dewatering and grade roads.</td><td>Rainfall excess × 4% of daily target, minimum 8 t.</td><td>Environmental Dewatering Crew</td></tr>
+<tr><td>Active equipment &lt; 9</td><td>Expedite preventive hydraulic-seal service on idle units.</td><td>Idle units × 2.5% of daily target.</td><td>Workshop Engineering</td></tr>
+</table>
+<p>Actions are sorted by recoverable tonnes, searchable by action, team, or priority, and can be toggled between pending and executed. Executed status is saved in browser storage. CSV export includes day, mine, planned and actual tonnes, risk, action, recovered tonnes, and status.</p>
+<p>The action view also exposes a local decision audit trail. It records action execution/reopening, scenario rehearsals, and exploratory drill dispatches with a timestamp, mine, subject, and detail.</p>
+
+<h2 id="strata">8. 3D Strata and Shaft</h2>
+<p>This is the upper half of the combined 3D geology inspection view. A depth slider from 5 m to 350 m below surface selects the active formation and moves the horizon line; the 3D Subsurface Explorer is stacked directly below it so the shaft context and depth grid can be inspected together.</p>
+<table><tr><th>Formation</th><th>Depth</th><th>Modeled content</th><th>Hardness</th><th>Drilling rate</th></tr>
+<tr><td>Alluvial Topsoil &amp; Laterite</td><td>0 to −18 m</td><td>0% Mn; waste rock</td><td>2.5–3.5 Mohs</td><td>14.5 m/hr</td></tr>
+<tr><td>Mansar Formation: Gondite &amp; Braunite</td><td>−18 to −195 m</td><td>38–48.5% Mn; primary pay zone</td><td>6.0–6.5</td><td>4.8 m/hr</td></tr>
+<tr><td>Lohangi Marble &amp; Calc-Silicates</td><td>−195 to −275 m</td><td>5–12% Mn; sub-economic</td><td>4.0–4.5</td><td>7.2 m/hr</td></tr>
+<tr><td>Tirodi Biotite Gneiss Basement</td><td>−275 to −450 m+</td><td>Trace Mn below 1%</td><td>6.5–7.0</td><td>3.5 m/hr</td></tr>
+</table>
+<p>For Balaghat, the visual includes the 385 m Bharweli main shaft and an elevator cage position tied to the depth slider. Other mine profiles have no shaft depth or underground levels in the bundled profile.</p>
+
+<h2 id="dgms">9. DGMS Safety Handover</h2>
+<p>The safety tab presents five pre-shift checks, a compliance percentage, and a print button. All five start checked in the current browser session. Clicking an item toggles it; the percentage is the count of checked items divided by five.</p>
+<table><tr><th>Check</th><th>Reference</th><th>Operational detail shown</th></tr>
+<tr><td>Sump dewatering and pump redundancy</td><td>CMR 2017 Reg. 149</td><td>Standby 75 HP Flygt submersible pumps, capacity and fuel readiness.</td></tr>
+<tr><td>Underground airflow and multi-gas telemetry</td><td>CMR 2017 Reg. 153</td><td>Airflow &gt;0.5 m/s; CO &lt;25 ppm; methane 0.0%; wet bulb &lt;30.5°C.</td></tr>
+<tr><td>Open-pit bench slope and berm</td><td>DGMS Tech Circular 02/2019</td><td>45° highwall limit; berm &gt;4.5 m; no radar-detected tension cracks.</td></tr>
+<tr><td>Pre-blast vibration and danger buffer</td><td>CMR 2017 Reg. 164</td><td>PPV within 10 mm/s; 300 m zone evacuated and hooter warning active.</td></tr>
+<tr><td>Haul-road dust and brake interlocks</td><td>CMR 2017 Reg. 87</td><td>Water tanker misting; retarder test at 10% gradient; edge berm above tyre diameter.</td></tr>
+</table>
+<p>The Print Shift Handover Dossier button invokes <code>window.print()</code>. Print CSS hides the rest of the page and keeps the element with id <code>printable-dossier</code>. The checklist is an operational aid in this prototype, not legal certification; references and conditions require validation by an authorized safety professional.</p>
+
+<h2 id="upload">10. Custom CSV Uploader</h2>
+<p>The uploader reads a local CSV through the browser FileReader. The file is not uploaded to a server. The exact header order required is:</p>
+<div class="formula">day,planned_tonnes,actual_tonnes,rainfall_mm,downtime_hrs,blasting_delay_hrs,active_equipment</div>
+<ul><li>At least one data row is required.</li><li>Planned tonnes must be greater than zero.</li><li>Actual tonnes, rainfall, downtime, blasting delay, and active equipment must be zero or greater.</li><li>Invalid rows are skipped; if no valid rows remain, the import is rejected.</li><li>Quoted fields and escaped double quotes are supported.</li><li>Accepted records replace the generated 30-day series until reset or until another mine is selected.</li></ul>
+<p>After a valid import, Overview charts, risk charts, KPIs, selected-day actions, root-cause explanation, and exports use the custom records. A sample template can be downloaded from the same view.</p>
+
+<h2 id="national">11. National Reserves</h2>
+<p>This reference view uses bundled Indian Minerals Yearbook-shaped data attributed in the repository to the Indian Bureau of Mines and Ministry of Mines.</p>
+<ul><li><strong>State-wise reserves chart:</strong> proven reserves and remaining resources in million tonnes for Odisha, Karnataka, Madhya Pradesh, Maharashtra, Goa, and Andhra Pradesh.</li><li><strong>Madhya Pradesh grade chart:</strong> stacked production by district for ferro grade 35–46% Mn, medium grade 25–35% Mn, low grade below 25% Mn, and siliceous/low grade.</li></ul>
+<p>These are contextual reference datasets and should be independently validated before being used for reporting or investment decisions.</p>
+
+<h2 id="equipment">12. Equipment Check Logs</h2>
+<p>This module provides a ten-unit deterministic fleet roster for the selected mine: three excavators, three haul trucks, two drill rigs, one wheel loader, and one dewatering pump skid. Unit identifiers are generated from the selected profile name plus a fixed suffix.</p>
+<ul><li>Each unit starts with a deterministic baseline health between 82% and 97% and generated service hours.</li><li>Service intervals are 250 hours for drills, 400 for pumps, and 300 for other units.</li><li>Each unit can be marked Operational, Needs Attention, or Critical Fault.</li><li>A technician name is required; an optional note can record symptoms such as hydraulic seepage.</li><li>The newest log controls the unit’s live condition and health adjustment; up to 25 entries are kept per unit in browser storage.</li><li>Fleet summary reports operational, watch, fault, and average-health counts. The alert panel reuses these statuses and flags overdue service.</li></ul>
+<p>The generated active-equipment input is also used by the production-series and shortfall formulas, so an equipment log changes the operational status and alerting surface but does not rewrite the historical series by itself.</p>
+
+<h2 id="explorer">13. 3D Subsurface Explorer</h2>
+<p>This view is a CSS 3D stack of four clickable 8 × 8 depth grids. Dragging rotates the stack; selecting a band brings it forward; clicking a cell opens an inspector with grid coordinate, depth range, ore probability, and manganese grade. The model is keyboard accessible: arrow keys move across the active 8 × 8 band, Page Up and Page Down move through depth bands while retaining the grid coordinate, and Home/End jump to the grid corners.</p>
+<ul><li>Surface Laterite and Alluvium: 0 to −18 m, non-ore bearing.</li><li>Mansar Gondite and Braunite ore body: −18 to −195 m, highest modeled probability and economic-grade variation.</li><li>Lohangi Marble and Calc-Silicate: −195 to −275 m, trace/sub-economic context.</li><li>Tirodi Biotite Gneiss Basement: −275 to −450 m+, trace-level context.</li></ul>
+<p>Cells in the ore body are generated with probability 38–93% and grade 26–50% Mn; other layers use lower trace-level ranges. Brightness represents the modeled probability at that level. The inspector adds a screening confidence score, evidence description, freshness label, and drilling priority. The module recommends verification drilling for high-confidence ore-body cells but does not create a geological resource statement.</p>
+
+<h2 id="data">14. Data, Calculations and State</h2>
+<h3>Generated production series</h3>
+<p>When no CSV is loaded, a repeatable 30-day series is generated from the mine’s daily target. Planned tonnes vary slightly. Actual tonnes apply rainfall, downtime, blast-delay, and fleet terms. The result is suitable for demonstrating UI behavior and formula transparency, not for claiming forecast accuracy.</p>
+<div class="formula">weatherPenalty = rainfall &gt; 20 ? (rainfall - 20) × (planned × 0.03) : 0
+downtimePenalty = downtime × (planned × 0.022)
+blastPenalty = blastingDelay × (planned × 0.035)
+fleetBonus = (activeEquipment - 9) × (planned × 0.018)
+actual = max(0, round(planned - all penalties + fleetBonus))
+risk = clamp(round(shortfallPercent × 2.5 + downtime × 3.5 + blastingDelay × 5), 2, 98)</div>
+<h3>Scenario formula</h3>
+<div class="formula">weatherPenalty = rainfall &gt; 18 ? (rainfall - 18) × (dailyTarget × 0.04) : 0
+downtimePenalty = downtime × mine.typicalDowntimeCostTonnesPerHr
+blastPenalty = blastingDelay × mine.typicalBlastingCostTonnesPerHr
+fleetBonus = (activeFleet - 8) × (dailyTarget × 0.02)
+output = max(0, round(dailyTarget - penalties + fleetBonus))
+risk = clamp(round(shortfallPercent × 2.6 + downtime × 4 + blastingDelay × 6), 1, 99)
+revenueDeficitLakhs = deficitTonnes × 14,200 / 100,000</div>
+<h3>Pricing and revenue</h3>
+<p>Bundled sample prices are ₹16,800/t for high-grade ferro, ₹12,400/t for medium grade, ₹7,200/t for siliceous low grade, and ₹14,200/t as the blended average used by the dashboard’s shortfall valuation.</p>
+<h3>Persistence boundaries</h3>
+<p>Browser persistence is local to the user’s browser profile and is not an auditable shared record. Clearing storage, changing browser profiles, or using another device removes the saved state. Reserve drill state, safety checklist state, and some transient alert state are not a server-side operational history.</p>
+
+<h2 id="workflow">15. End-to-End Operator Workflow</h2>
+<ol>
+<li>Select the active mine and confirm target, method, weather state, and clock.</li>
+<li>Review Overview KPIs and the unified alert feed. Follow alert links into the owning module.</li>
+<li>Use Reserve Heatmap to inspect high-probability lease cells and dispatch verification drilling where appropriate.</li>
+<li>Open Risk and What-If to test weather, downtime, blast delay, fleet, and zone deployment scenarios.</li>
+<li>Open Shift Directives, select the relevant day, review root causes, assign the ranked response, mark execution, and export CSV.</li>
+<li>Use Equipment Check Logs to record unit condition and technician evidence.</li>
+<li>Use the geological views to understand active formations and inspect depth-specific modeled cells.</li>
+<li>Complete the five DGMS-style checks and print the shift dossier for handover.</li>
+<li>Use CSV import when a local daily operations log should replace the demonstration series for analysis.</li>
+<li>Use National Reserves for wider reference context, not as a substitute for mine planning data.</li>
+</ol>
+
+<h2 id="boundaries">16. Current Boundaries and Production Roadmap</h2>
+<div class="notice"><strong>Do not treat the current interface as a live control system.</strong> It is a front-end prototype that illustrates the workflow and interaction model.</div>
+<ul><li>Replace deterministic generators with versioned, trained, validated model services.</li><li>Add authenticated APIs and role-based access for telemetry, boreholes, assays, weather, users, and audit records.</li><li>Store operational state in a managed database with retention, approvals, and immutable history; the current audit trail is browser-local only.</li><li>Add real geospatial tiles, coordinate reference handling, raster processing, borehole geometry, assay provenance, and certified reserve estimation.</li><li>Validate pricing, reserve classifications, mine procedures, and all safety references with authorized domain experts.</li><li>Replace the illustrative evidence score with calibrated uncertainty intervals and machine-readable source provenance.</li><li>Add model monitoring, drift detection, explainability validation, and human approval gates for recommendations.</li><li>Add offline synchronization and conflict resolution for low-connectivity mine sites.</li><li>Add unit, integration, accessibility, browser, security, and data-contract tests.</li><li>Add a content-security policy and a production asset strategy for fonts, video, and external APIs.</li><li>Replace the illustrative browser-chrome URL; it is not a deployed backend endpoint.</li></ul>
+
+<div class="footer">MANGNEX Control Room documentation. This report describes the current repository implementation and its bundled demonstration data. It is not a legal, geological, financial, or mine-safety certification.</div>
+</body>
+</html>
