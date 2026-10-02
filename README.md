@@ -14,6 +14,7 @@ The project is currently a client-side demonstration and decision-support protot
 - [Terminology](#terminology)
 - [Requirements and installation](#requirements-and-installation)
 - [Development, build, and preview](#development-build-and-preview)
+- [GitHub Pages deployment](#github-pages-deployment)
 - [Using the application](#using-the-application)
 - [Data and calculation notes](#data-and-calculation-notes)
 - [CSV format](#csv-format)
@@ -263,12 +264,30 @@ npm run preview
 
 The preview server serves the already-built `dist/` output. It is useful for checking production bundling but is not a replacement for a production hosting service.
 
+## GitHub Pages deployment
+
+The repository includes [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml), which builds the site and publishes `dist/` to GitHub Pages whenever `main` is updated. The Vite configuration automatically uses `/<repository-name>/` for the project-site URL in GitHub Actions, while local development and local builds continue to use `/`.
+
+To enable deployment:
+
+1. Push the repository to GitHub.
+2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
+3. Push to `main` or run **Deploy to GitHub Pages** manually from the repository's **Actions** tab.
+
+The deployed project URL is:
+
+```text
+https://<owner>.github.io/MANGNEX_Demo/
+```
+
+The build also creates `dist/404.html` from the application shell so GitHub Pages can fall back to the SPA entry point when a deep link is requested.
+
 ### Available npm scripts
 
 | Script | Purpose |
 | --- | --- |
 | `npm run dev` | Start Vite in development mode with HMR |
-| `npm run build` | Generate the optimized production bundle |
+| `npm run build` | Generate the optimized production bundle and SPA fallback |
 | `npm run preview` | Serve the generated production bundle locally |
 
 There is currently no test, lint, or typecheck script in `package.json`.
