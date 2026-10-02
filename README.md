@@ -271,8 +271,10 @@ The repository includes [`.github/workflows/deploy-pages.yml`](./.github/workflo
 To enable deployment:
 
 1. Push the repository to GitHub.
-2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
+2. In **Settings → Pages**, set **Source** to **GitHub Actions** and save.
 3. Push to `main` or run **Deploy to GitHub Pages** manually from the repository's **Actions** tab.
+
+If the deployment job reports `createPagesDeployment ... Not Found`, Pages has not been enabled for the repository yet. Complete step 2 first, then rerun the workflow.
 
 The deployed project URL is:
 
